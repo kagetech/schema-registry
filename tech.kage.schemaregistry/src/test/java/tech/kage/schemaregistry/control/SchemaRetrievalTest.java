@@ -64,7 +64,7 @@ class SchemaRetrievalTest {
     @MethodSource("testSchemasBySubject")
     void retrievesLatestSchemaBySubject(String subject, List<Schema> schemasWithSubject, Schema expectedSchema) {
         // Given
-        given(schemaRepository.findBySubjectOrderedByVersionDesc(subject))
+        given(schemaRepository.findBySubjectAndVersionOrderedByVersionDesc(subject, null))
                 .willReturn(Flux.fromIterable(schemasWithSubject));
 
         // When
@@ -83,7 +83,7 @@ class SchemaRetrievalTest {
         // Given
         var invalidSubject = "invalid-subject";
 
-        given(schemaRepository.findBySubjectOrderedByVersionDesc(invalidSubject))
+        given(schemaRepository.findBySubjectAndVersionOrderedByVersionDesc(invalidSubject, null))
                 .willReturn(Flux.empty());
 
         // When
@@ -93,6 +93,43 @@ class SchemaRetrievalTest {
         StepVerifier
                 .create(retrievedSchema)
                 .as("returns empty mono when schema not found by subject")
+                .expectComplete();
+    }
+
+    @ParameterizedTest
+    @MethodSource("testSchemasBySubjectAndVersion")
+    void retrievesSchemaBySubjectAndVersion(String subject, Integer version, Schema expectedSchema) {
+        // Given
+        given(schemaRepository.findBySubjectAndVersionOrderedByVersionDesc(subject, version))
+                .willReturn(Flux.just(expectedSchema));
+
+        // When
+        var retrievedSchema = schemaRetrieval.getSchemaBySubjectAndVersion(subject, version);
+
+        // Then
+        StepVerifier
+                .create(retrievedSchema)
+                .expectNext(expectedSchema)
+                .as("retrieves expected schema")
+                .verifyComplete();
+    }
+
+    @Test
+    void returnsEmptyMonoWhenSchemaNotFoundBySubjectAndVersion() {
+        // Given
+        var invalidSubject = "invalid-subject";
+        var invalidVersion = 123;
+
+        given(schemaRepository.findBySubjectAndVersionOrderedByVersionDesc(invalidSubject, invalidVersion))
+                .willReturn(Flux.empty());
+
+        // When
+        var retrievedSchema = schemaRetrieval.getSchemaBySubjectAndVersion(invalidSubject, invalidVersion);
+
+        // Then
+        StepVerifier
+                .create(retrievedSchema)
+                .as("returns empty mono when schema not found by subject and version")
                 .expectComplete();
     }
 
@@ -129,5 +166,16 @@ class SchemaRetrievalTest {
                                         transactionSchema(2, 1016, "2"),
                                         transactionSchema(1, 1006, ""))),
                         named("transaction schema 4", transactionSchema(4, 1036, "4"))));
+    }
+
+    static Stream<Arguments> testSchemasBySubjectAndVersion() {
+        return Stream.of(
+                arguments("user-subject", 1, named("user schema", userSchema(1, 1001, ""))),
+                arguments("address-subject", 2, named("address schema", addressSchema(2, 1022, "2"))),
+                arguments("order-subject", 2, named("order schema", orderSchema(2, 1023, "2"))),
+                arguments("payment-subject", 3, named("payment schema", paymentSchema(3, 1024, "3"))),
+                arguments("customer-profile-subject", 1,
+                        named("customer profile schema", customerProfileSchema(1, 1005, ""))),
+                arguments("transaction-subject", 4, named("transaction schema", transactionSchema(4, 1036, "4"))));
     }
 }

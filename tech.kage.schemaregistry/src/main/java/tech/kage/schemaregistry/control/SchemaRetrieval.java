@@ -55,7 +55,22 @@ public class SchemaRetrieval {
      */
     public Mono<Schema> getLatestSchemaBySubject(String subject) {
         return schemaRepository
-                .findBySubjectOrderedByVersionDesc(subject)
+                .findBySubjectAndVersionOrderedByVersionDesc(subject, null)
                 .next();
+    }
+
+    /**
+     * Retrieves the schema for the specified subject and version.
+     *
+     * @param subject the subject for which to retrieve the schema
+     * @param version the version of the schema to retrieve
+     * 
+     * @return a Mono containing the schema for the given version, or an empty
+     *         Mono if none exists
+     */
+    public Mono<Schema> getSchemaBySubjectAndVersion(String subject, int version) {
+        return schemaRepository
+                .findBySubjectAndVersionOrderedByVersionDesc(subject, version)
+                .singleOrEmpty();
     }
 }

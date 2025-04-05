@@ -58,17 +58,22 @@ class SubjectVersionResource {
     }
 
     /**
-     * Retrieves the schema with the highest version for the given subject.
+     * Retrieves the schema for the given subject and version.
      *
      * @param subject the subject for which to retrieve the schema
+     * @param version "latest" for the highest version or a numeric string for a
+     *                specific version
      * 
      * @return a Mono containing a ResponseEntity with the schema if found, or a 404
      *         Not Found response if none exists
      */
-    @GetMapping("latest")
-    Mono<ResponseEntity<Schema>> getLatestSchema(@PathVariable String subject) {
-        return schemaRetrieval
-                .getLatestSchemaBySubject(subject)
+    @GetMapping("{version}")
+    Mono<ResponseEntity<Schema>> getSchemaByVersion(@PathVariable String subject, @PathVariable String version) {
+        return Mono
+                .just("latest".equalsIgnoreCase(version))
+                .flatMap(latestRequested -> latestRequested
+                        ? schemaRetrieval.getLatestSchemaBySubject(subject)
+                        : schemaRetrieval.getSchemaBySubjectAndVersion(subject, Integer.parseInt(version)))
                 .map(ResponseEntity::ok)
                 .switchIfEmpty(Mono.just(notFound().build()));
     }

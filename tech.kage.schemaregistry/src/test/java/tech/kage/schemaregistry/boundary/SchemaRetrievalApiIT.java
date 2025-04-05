@@ -108,6 +108,44 @@ class SchemaRetrievalApiIT {
                 .expectBody().isEmpty();
     }
 
+    @ParameterizedTest
+    @MethodSource("testSchemasBySubjectAndVersion")
+    void returns200AndSchemaFoundBySubjectAndVersion(String subject, Integer version, Schema expectedSchema) {
+        // Given
+        given(schemaRetrieval.getSchemaBySubjectAndVersion(subject, version))
+                .willReturn(Mono.just(expectedSchema));
+
+        var request = webTestClient.get().uri("/subjects/{subject}/versions/{version}", subject, version);
+
+        // When
+        var response = request.exchange();
+
+        // Then
+        response
+                .expectStatus().isOk()
+                .expectBody(Schema.class).isEqualTo(expectedSchema);
+    }
+
+    @Test
+    void returns404WhenNoSchemaBySubjectAndVersionFound() {
+        // Given
+        var invalidSubject = "invalid-subject";
+        var invalidVersion = 123;
+
+        given(schemaRetrieval.getSchemaBySubjectAndVersion(invalidSubject, invalidVersion))
+                .willReturn(Mono.empty());
+
+        var request = webTestClient.get().uri("/subjects/{subject}/versions/{version}", invalidSubject, invalidVersion);
+
+        // When
+        var response = request.exchange();
+
+        // Then
+        response
+                .expectStatus().isNotFound()
+                .expectBody().isEmpty();
+    }
+
     static Stream<Arguments> testSchemasBySubject() {
         return Stream.of(
                 arguments("user-subject", named("user schema", userSchema(1, 1001, ""))),
@@ -117,5 +155,16 @@ class SchemaRetrievalApiIT {
                 arguments("customer-profile-subject",
                         named("customer profile schema", customerProfileSchema(1, 1005, ""))),
                 arguments("transaction-subject", named("transaction schema", transactionSchema(4, 1036, "4"))));
+    }
+
+    static Stream<Arguments> testSchemasBySubjectAndVersion() {
+        return Stream.of(
+                arguments("user-subject", 1, named("user schema", userSchema(1, 1001, ""))),
+                arguments("address-subject", 2, named("address schema", addressSchema(2, 1022, "2"))),
+                arguments("order-subject", 2, named("order schema", orderSchema(2, 1023, "2"))),
+                arguments("payment-subject", 3, named("payment schema", paymentSchema(3, 1024, "3"))),
+                arguments("customer-profile-subject", 1,
+                        named("customer profile schema", customerProfileSchema(1, 1005, ""))),
+                arguments("transaction-subject", 4, named("transaction schema", transactionSchema(4, 1036, "4"))));
     }
 }

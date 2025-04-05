@@ -35,13 +35,14 @@ import reactor.core.publisher.Flux;
  */
 public interface SchemaRepository {
     /**
-     * Retrieves all schemas for the given subject, ordered by version in descending
-     * order.
+     * Retrieves schemas for the given subject and optional version, ordered by
+     * version in descending order.
      *
      * @param subject the subject for which to retrieve schemas
+     * @param version the specific version to retrieve, or null for all versions
      * 
      * @return a Flux of schemas, ordered from highest to lowest version, or an
      *         empty Flux if none are found
      */
-    Flux<Schema> findBySubjectOrderedByVersionDesc(String subject);
+    Flux<Schema> findBySubjectAndVersionOrderedByVersionDesc(String subject, Integer version);
 }

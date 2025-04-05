@@ -126,6 +126,12 @@
                     <artifactId>jacoco-maven-plugin</artifactId>
                     <version>${jacoco.version}</version>
 
+                    <configuration>
+                        <excludes>
+                            <exclude>tech/kage/**/*AutoConfiguration.class</exclude>
+                        </excludes>
+                    </configuration>
+
                     <executions>
                         <execution>
                             <id>jacoco-initialize</id>

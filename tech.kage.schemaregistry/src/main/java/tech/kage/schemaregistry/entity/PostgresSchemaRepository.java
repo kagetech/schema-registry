@@ -51,8 +51,9 @@ class PostgresSchemaRepository implements SchemaRepository {
                     JOIN schemas.schemas s ON sub.schema_id = s.id
                     LEFT OUTER JOIN schemas.references ref ON s.id = ref.schema_id
                 WHERE sub.subject = :subject
-                ORDER BY sub.version DESC, ref_name
             """;
+
+    private static final String SELECT_SCHEMAS_ORDER_CLAUSE_SQL = " ORDER BY sub.version DESC, ref_name";
 
     private static final String SUBJECT = "subject";
     private static final String VERSION = "version";
@@ -74,13 +75,19 @@ class PostgresSchemaRepository implements SchemaRepository {
     }
 
     @Override
-    public Flux<Schema> findBySubjectOrderedByVersionDesc(String subject) {
+    public Flux<Schema> findBySubjectAndVersionOrderedByVersionDesc(String subject, Integer version) {
         var parameters = new HashMap<String, Object>();
 
         parameters.put(SUBJECT, subject);
 
+        if (version != null) {
+            parameters.put(VERSION, version);
+        }
+
         return databaseClient
-                .sql(SELECT_SCHEMAS_SQL)
+                .sql(SELECT_SCHEMAS_SQL
+                        + (version != null ? " AND sub.version = :version" : "")
+                        + SELECT_SCHEMAS_ORDER_CLAUSE_SQL)
                 .bindValues(parameters)
                 .fetch()
                 .all()

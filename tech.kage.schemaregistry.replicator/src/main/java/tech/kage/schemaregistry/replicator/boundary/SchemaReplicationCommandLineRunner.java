@@ -23,46 +23,46 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package tech.kage.schemaregistry.control;
+package tech.kage.schemaregistry.replicator.boundary;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import io.confluent.kafka.schemaregistry.client.rest.entities.Schema;
-import reactor.core.publisher.Mono;
-import tech.kage.schemaregistry.entity.RelationalSchemaRepository;
+import tech.kage.schemaregistry.replicator.control.SchemaReplication;
 
 /**
- * Implementation of the Schema Lookup use case.
+ * Command-line runner to initiate schema replication to Confluent Schema
+ * Registry.
  * 
  * @author Dariusz Szpakowski
  */
 @Component
-public class SchemaLookup {
-    private final RelationalSchemaRepository schemaRepository;
+public class SchemaReplicationCommandLineRunner implements CommandLineRunner {
+    private static final Logger log = LoggerFactory.getLogger(SchemaReplicationCommandLineRunner.class);
 
-    /**
-     * Constructs a new {@link SchemaLookup} instance.
-     *
-     * @param schemaRepository an instance of {@link RelationalSchemaRepository}
-     */
-    SchemaLookup(RelationalSchemaRepository schemaRepository) {
-        this.schemaRepository = schemaRepository;
+    private final SchemaReplication schemaReplication;
+
+    public SchemaReplicationCommandLineRunner(SchemaReplication schemaReplication) {
+        this.schemaReplication = schemaReplication;
     }
 
     /**
-     * Looks up a schema by subject, matching the specified schema's definition and
-     * references.
+     * Initiates schema replication to the Confluent Schema Registry.
      *
-     * @param schema the schema to match against stored schemas
-     * 
-     * @return a Mono containing the matching schema with the highest version, or an
-     *         empty Mono if none exists
+     * @param args command-line arguments (unused)
      */
-    public Mono<Schema> lookupSchema(Schema schema) {
-        return schemaRepository
-                .findBySubjectAndVersionOrderedByVersionDesc(schema.getSubject(), null)
-                .filter(s -> s.getSchema().equals(schema.getSchema())
-                        && s.getReferences().equals(schema.getReferences()))
-                .singleOrEmpty();
+    @Override
+    public void run(String... args) {
+        log.info("Starting schema replication...");
+
+        schemaReplication
+                .replicateAllSchemas()
+                .doOnNext(schema -> log.info("Replicated schema ID: {} for {} v{}", schema.getId(), schema.getSubject(),
+                        schema.getVersion()))
+                .blockLast();
+
+        log.info("Schema replication completed successfully.");
     }
 }

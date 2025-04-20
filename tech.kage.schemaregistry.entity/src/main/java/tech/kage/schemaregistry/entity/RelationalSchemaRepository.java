@@ -29,11 +29,11 @@ import io.confluent.kafka.schemaregistry.client.rest.entities.Schema;
 import reactor.core.publisher.Flux;
 
 /**
- * Repository interface for accessing schema data by subject.
+ * Repository interface for accessing schema data from a relational database.
  * 
  * @author Dariusz Szpakowski
  */
-public interface SchemaRepository {
+public interface RelationalSchemaRepository {
     /**
      * Retrieves schemas for the given subject and optional version, ordered by
      * version in descending order.
@@ -45,4 +45,12 @@ public interface SchemaRepository {
      *         empty Flux if none are found
      */
     Flux<Schema> findBySubjectAndVersionOrderedByVersionDesc(String subject, Integer version);
+
+    /**
+     * Retrieves all schemas, ordered by schema ID in ascending order.
+     *
+     * @return a Flux of all schemas, ordered by schema ID ascending, or an
+     *         empty Flux if none are found
+     */
+    Flux<Schema> findAllOrderedBySchemaId();
 }

@@ -47,7 +47,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import io.confluent.kafka.schemaregistry.client.rest.entities.Schema;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
-import tech.kage.schemaregistry.entity.SchemaRepository;
+import tech.kage.schemaregistry.entity.RelationalSchemaRepository;
 
 /**
  * Specification of the Schema Retrieval use case.
@@ -55,7 +55,7 @@ import tech.kage.schemaregistry.entity.SchemaRepository;
  * @author Dariusz Szpakowski
  */
 class SchemaRetrievalTest {
-    SchemaRepository schemaRepository = mock(SchemaRepository.class);
+    RelationalSchemaRepository schemaRepository = mock(RelationalSchemaRepository.class);
 
     // UUT
     SchemaRetrieval schemaRetrieval = new SchemaRetrieval(schemaRepository);

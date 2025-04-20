@@ -27,12 +27,12 @@ package tech.kage.schemaregistry.entity;
 
 import static org.junit.jupiter.api.Named.named;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
-import static tech.kage.schemaregistry.test.data.TestSchemas.addressSchema;
-import static tech.kage.schemaregistry.test.data.TestSchemas.customerProfileSchema;
-import static tech.kage.schemaregistry.test.data.TestSchemas.orderSchema;
-import static tech.kage.schemaregistry.test.data.TestSchemas.paymentSchema;
-import static tech.kage.schemaregistry.test.data.TestSchemas.transactionSchema;
-import static tech.kage.schemaregistry.test.data.TestSchemas.userSchema;
+import static tech.kage.schemaregistry.entity.test.data.TestSchemas.addressSchema;
+import static tech.kage.schemaregistry.entity.test.data.TestSchemas.customerProfileSchema;
+import static tech.kage.schemaregistry.entity.test.data.TestSchemas.orderSchema;
+import static tech.kage.schemaregistry.entity.test.data.TestSchemas.paymentSchema;
+import static tech.kage.schemaregistry.entity.test.data.TestSchemas.transactionSchema;
+import static tech.kage.schemaregistry.entity.test.data.TestSchemas.userSchema;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -66,7 +66,7 @@ import reactor.test.StepVerifier;
 @ActiveProfiles("test")
 class PostgresSchemaRepositoryIT {
     @Autowired
-    SchemaRepository schemaRepository;
+    RelationalSchemaRepository schemaRepository;
 
     @Configuration
     @EnableAutoConfiguration
@@ -163,6 +163,58 @@ class PostgresSchemaRepositoryIT {
         StepVerifier
                 .create(foundSchemas)
                 .as("returns empty flux when schema not found by subject and version")
+                .expectComplete();
+    }
+
+    @Test
+    void findsAllSchemasOrderedBySchemaId(
+            @Autowired DatabaseClient dbClient,
+            @Value("classpath:/test-data/schemas/data.sql") Resource prepareData) throws IOException {
+        // Given
+        dbClient
+                .sql(prepareData.getContentAsString(StandardCharsets.UTF_8))
+                .fetch()
+                .rowsUpdated()
+                .block();
+
+        var expectedSchemas = List.of(
+                userSchema(1, 1001, ""),
+                addressSchema(1, 1002, ""),
+                orderSchema(1, 1003, ""),
+                paymentSchema(1, 1004, ""),
+                customerProfileSchema(1, 1005, ""),
+                transactionSchema(1, 1006, ""),
+                paymentSchema(2, 1014, "2"),
+                transactionSchema(2, 1016, "2"),
+                addressSchema(2, 1022, "2"),
+                orderSchema(2, 1023, "2"),
+                paymentSchema(3, 1024, "3"),
+                transactionSchema(3, 1026, "3"),
+                transactionSchema(4, 1036, "4"));
+
+        // When
+        var foundSchemas = schemaRepository.findAllOrderedBySchemaId();
+
+        // Then
+        StepVerifier
+                .create(foundSchemas)
+                .expectNextSequence(expectedSchemas)
+                .as("finds all schemas ordered by schema ID ascending")
+                .verifyComplete();
+    }
+
+    @Test
+    void returnsEmptyFluxWhenNoSchemasExist() {
+        // Given
+        // No data loaded, tables are empty after ddl.sql
+
+        // When
+        var foundSchemas = schemaRepository.findAllOrderedBySchemaId();
+
+        // Then
+        StepVerifier
+                .create(foundSchemas)
+                .as("returns empty flux when no schemas exist")
                 .expectComplete();
     }
 

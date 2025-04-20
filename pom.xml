@@ -69,10 +69,18 @@
 
     <modules>
         <module>tech.kage.schemaregistry</module>
+        <module>tech.kage.schemaregistry.entity</module>
+        <module>tech.kage.schemaregistry.replicator</module>
     </modules>
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>tech.kage.schemaregistry</groupId>
+                <artifactId>tech.kage.schemaregistry.entity</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>io.confluent</groupId>
                 <artifactId>kafka-schema-registry-client</artifactId>
@@ -129,6 +137,7 @@
                     <configuration>
                         <excludes>
                             <exclude>tech/kage/**/*AutoConfiguration.class</exclude>
+                            <exclude>tech/kage/**/Application.class</exclude>
                         </excludes>
                     </configuration>
 

@@ -29,7 +29,7 @@ import org.springframework.stereotype.Component;
 
 import io.confluent.kafka.schemaregistry.client.rest.entities.Schema;
 import reactor.core.publisher.Mono;
-import tech.kage.schemaregistry.entity.SchemaRepository;
+import tech.kage.schemaregistry.entity.RelationalSchemaRepository;
 
 /**
  * Implementation of the Schema Retrieval use case.
@@ -38,9 +38,14 @@ import tech.kage.schemaregistry.entity.SchemaRepository;
  */
 @Component
 public class SchemaRetrieval {
-    private final SchemaRepository schemaRepository;
+    private final RelationalSchemaRepository schemaRepository;
 
-    SchemaRetrieval(SchemaRepository schemaRepository) {
+    /**
+     * Constructs a new {@link SchemaRetrieval} instance.
+     *
+     * @param schemaRepository an instance of {@link RelationalSchemaRepository}
+     */
+    SchemaRetrieval(RelationalSchemaRepository schemaRepository) {
         this.schemaRepository = schemaRepository;
     }
 

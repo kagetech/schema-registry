@@ -37,12 +37,12 @@ import io.confluent.kafka.schemaregistry.client.rest.entities.SchemaReference;
 import reactor.core.publisher.Flux;
 
 /**
- * A PostgreSQL-based implementation of {@link SchemaRepository}.
+ * A PostgreSQL-based implementation of {@link RelationalSchemaRepository}.
  * 
  * @author Dariusz Szpakowski
  */
 @Component
-class PostgresSchemaRepository implements SchemaRepository {
+class PostgresSchemaRepository implements RelationalSchemaRepository {
     private static final String SELECT_SCHEMAS_SQL = """
                 SELECT
                     sub.subject, sub.version, sub.schema_id, schema,
@@ -50,10 +50,15 @@ class PostgresSchemaRepository implements SchemaRepository {
                 FROM schemas.subjects sub
                     JOIN schemas.schemas s ON sub.schema_id = s.id
                     LEFT OUTER JOIN schemas.references ref ON s.id = ref.schema_id
-                WHERE sub.subject = :subject
+                %s
+                ORDER BY %s, ref_name
             """;
 
-    private static final String SELECT_SCHEMAS_ORDER_CLAUSE_SQL = " ORDER BY sub.version DESC, ref_name";
+    private static final String WHERE_SUBJECT = "WHERE sub.subject = :subject";
+    private static final String EMPTY_WHERE = "";
+
+    private static final String ORDER_BY_VERSION_DESC = "sub.version DESC";
+    private static final String ORDER_BY_SCHEMA_ID = "sub.schema_id";
 
     private static final String SUBJECT = "subject";
     private static final String VERSION = "version";
@@ -86,9 +91,20 @@ class PostgresSchemaRepository implements SchemaRepository {
 
         return databaseClient
                 .sql(SELECT_SCHEMAS_SQL
-                        + (version != null ? " AND sub.version = :version" : "")
-                        + SELECT_SCHEMAS_ORDER_CLAUSE_SQL)
+                        .formatted(
+                                WHERE_SUBJECT + (version != null ? " AND sub.version = :version" : ""),
+                                ORDER_BY_VERSION_DESC))
                 .bindValues(parameters)
+                .fetch()
+                .all()
+                .bufferUntilChanged(result -> result.get(SCHEMA_ID))
+                .map(this::toSchema);
+    }
+
+    @Override
+    public Flux<Schema> findAllOrderedBySchemaId() {
+        return databaseClient
+                .sql(SELECT_SCHEMAS_SQL.formatted(EMPTY_WHERE, ORDER_BY_SCHEMA_ID))
                 .fetch()
                 .all()
                 .bufferUntilChanged(result -> result.get(SCHEMA_ID))

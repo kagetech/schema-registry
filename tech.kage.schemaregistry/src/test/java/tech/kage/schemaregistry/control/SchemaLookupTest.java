@@ -47,7 +47,7 @@ import io.confluent.kafka.schemaregistry.client.rest.entities.Schema;
 import io.confluent.kafka.schemaregistry.client.rest.entities.SchemaReference;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
-import tech.kage.schemaregistry.entity.SchemaRepository;
+import tech.kage.schemaregistry.entity.RelationalSchemaRepository;
 
 /**
  * Specification of the Schema Lookup use case.
@@ -55,7 +55,7 @@ import tech.kage.schemaregistry.entity.SchemaRepository;
  * @author Dariusz Szpakowski
  */
 class SchemaLookupTest {
-    SchemaRepository schemaRepository = mock(SchemaRepository.class);
+    RelationalSchemaRepository schemaRepository = mock(RelationalSchemaRepository.class);
 
     // UUT
     SchemaLookup schemaLookup = new SchemaLookup(schemaRepository);

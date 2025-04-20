@@ -23,46 +23,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package tech.kage.schemaregistry.control;
-
-import org.springframework.stereotype.Component;
+package tech.kage.schemaregistry.replicator.entity;
 
 import io.confluent.kafka.schemaregistry.client.rest.entities.Schema;
 import reactor.core.publisher.Mono;
-import tech.kage.schemaregistry.entity.RelationalSchemaRepository;
 
 /**
- * Implementation of the Schema Lookup use case.
+ * Repository for persisting schemas to Kafka's schema registry topic.
  * 
  * @author Dariusz Szpakowski
  */
-@Component
-public class SchemaLookup {
-    private final RelationalSchemaRepository schemaRepository;
-
+public interface KafkaSchemaRepository {
     /**
-     * Constructs a new {@link SchemaLookup} instance.
+     * Saves a schema to the Kafka schema registry topic.
      *
-     * @param schemaRepository an instance of {@link RelationalSchemaRepository}
-     */
-    SchemaLookup(RelationalSchemaRepository schemaRepository) {
-        this.schemaRepository = schemaRepository;
-    }
-
-    /**
-     * Looks up a schema by subject, matching the specified schema's definition and
-     * references.
-     *
-     * @param schema the schema to match against stored schemas
+     * @param schema the schema to save
      * 
-     * @return a Mono containing the matching schema with the highest version, or an
-     *         empty Mono if none exists
+     * @return a Mono emitting the saved schema, or erroring on failure
      */
-    public Mono<Schema> lookupSchema(Schema schema) {
-        return schemaRepository
-                .findBySubjectAndVersionOrderedByVersionDesc(schema.getSubject(), null)
-                .filter(s -> s.getSchema().equals(schema.getSchema())
-                        && s.getReferences().equals(schema.getReferences()))
-                .singleOrEmpty();
-    }
+    Mono<Schema> save(Schema schema);
 }

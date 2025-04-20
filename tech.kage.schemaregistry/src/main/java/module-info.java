@@ -30,27 +30,22 @@
  * @author Dariusz Szpakowski
  */
 module tech.kage.schemaregistry {
+    requires tech.kage.schemaregistry.entity;
+
     requires reactor.core;
     requires org.reactivestreams;
     requires spring.beans;
     requires spring.boot.autoconfigure;
     requires spring.context;
 
-    requires transitive kafka.schema.registry.client;
-
     // Boundary
     requires spring.web;
     requires spring.webflux;
 
-    // Entity
-    requires spring.r2dbc;
-
     exports tech.kage.schemaregistry to spring.beans, spring.context;
     exports tech.kage.schemaregistry.boundary to spring.beans, spring.context;
-    exports tech.kage.schemaregistry.entity to spring.beans, spring.context;
 
     opens tech.kage.schemaregistry to spring.core;
     opens tech.kage.schemaregistry.boundary to spring.core;
     opens tech.kage.schemaregistry.control to spring.core;
-    opens tech.kage.schemaregistry.entity to spring.core;
 }

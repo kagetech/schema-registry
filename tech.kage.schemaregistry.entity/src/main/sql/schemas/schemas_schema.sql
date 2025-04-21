@@ -25,5 +25,6 @@ CREATE TABLE IF NOT EXISTS schemas.references (
     version integer NOT NULL,
     
     PRIMARY KEY (schema_id, name),
+    FOREIGN KEY (schema_id) REFERENCES schemas.schemas(id),
     FOREIGN KEY (subject, version) REFERENCES schemas.subjects
 );

@@ -44,6 +44,7 @@ module tech.kage.schemaregistry {
 
     exports tech.kage.schemaregistry to spring.beans, spring.context;
     exports tech.kage.schemaregistry.boundary to spring.beans, spring.context;
+    exports tech.kage.schemaregistry.control to spring.beans, spring.context;
 
     opens tech.kage.schemaregistry to spring.core;
     opens tech.kage.schemaregistry.boundary to spring.core;
